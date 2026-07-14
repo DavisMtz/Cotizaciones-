@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotización Liverpool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        table, th, td { border: 1px solid #e2e8f0; }
+        
+        #product-table th, #product-table td { 
+            padding: 10px 10px; 
+            text-align: left; 
+            vertical-align: middle; 
+        }
+        #product-table th { 
+            background-color: #f8fafc; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            white-space: normal; 
+            text-align: center; 
+            vertical-align: top; 
+            line-height: 1.2; 
+        }
+
+        .editable-input { 
+            width: 100%; 
+            padding: 8px 10px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 0.875rem; 
+        }
+        #product-table .editable-input {
+            padding: 6px 8px; 
+        }
+
+        .editable-input:focus { outline: none; border-color: #E10098; box-shadow: 0 0 0 2px rgba(225, 0, 152, 0.3); }
+        
+        .btn { padding: 10px 20px; 
+            border-radius: 6px; cursor: pointer; transition: background-color 0.3s ease, opacity 0.3s ease; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;}
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-pink { background-color: #E10098; color: white; }
+        .btn-pink:hover:not(:disabled) { background-color: #c10080; }
+        .btn-green { background-color: #10B981; color: white; }
+        .btn-green:hover:not(:disabled) { background-color: #059669; }
+        .btn-red { background-color: #ef4444; color: white; }
+        .btn-red:hover:not(:disabled) { background-color: #dc2626; }
+        .btn-gray { background-color: #6b7280; color: white; } 
+        .btn-gray:hover:not(:disabled) { background-color: #4b5563; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; font-size: 9pt; } 
+            .print-container { box-shadow: none; border: none; max-width: 100%; margin: 0; padding: 15px; } 
+            #product-table th, #product-table td { padding: 4px; font-size: 7.5pt;} 
+            .editable-input { padding: 2px 4px; font-size: 7.5pt; border: none; background-color: transparent; -webkit-appearance: none; appearance: none; }
+            select.editable-input { border: none; background-color: transparent; -webkit-appearance: none; appearance: none; padding-right: 0; }
+        }
+        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; width: 16px; height: 16px; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+      
+        .col-sku { min-width: 80px; }
+        .col-cantidad { min-width: 60px; text-align: center;}
+        .col-descripcion { min-width: 220px; width: 25%;} 
+        .col-p-unitario { min-width: 100px; }
+        .col-p-volumen { min-width: 110px; }
+        .col-costo-pago-unico { min-width: 110px; }
+        .col-desc-publico { min-width: 80px; }
+        .col-precio-c-desc { min-width: 110px; }
+        .col-desc-adic-select { min-width: 85px; }
+        .col-desc-adic-percent { min-width: 80px; }
+        .col-subtotal-base { min-width: 110px; }
+        .col-iva { min-width: 90px; }
+        .col-total-fila { min-width: 110px; font-weight: 600; }
+        .col-accion { min-width: 80px; text-align: center; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { 'liverpool-pink': '#E10098', }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="print-container max-w-full xl:max-w-7xl mx-auto bg-white p-6 md:p-10 rounded-lg shadow-lg border border-gray-200">
+        <div id="cancel-button-area-top" class="no-print mb-6 text-right">
+            <button id="cancel-quote-button-top" class="btn btn-gray text-sm px-4 py-2">
+                <span>❌</span>
+                <span>Cancelar y Volver</span>
+            </button>
+        </div>
+
+        <header class="flex flex-col md:flex-row justify-between items-start mb-10 border-b pb-6 border-gray-200">
+            <div class="text-left mb-4 md:mb-0">
+                <h1 class="text-4xl font-bold text-gray-800">COTIZACIÓN</h1>
+                <p class="text-gray-500 mt-1">Ventas a Distancia</p>
+                <p class="text-gray-500 mt-3">Fecha: <span id="current-date"></span></p>
+                <p class="text-red-600 text-xs font-semibold mt-1">Precios y promociones sujetos a cambio sin previo aviso.</p>
+                <p class="text-gray-700 text-base mt-2 font-medium">Folio: <span id="quote-folio-display">NUEVO</span></p>
+            </div>
+            <div class="text-right">
+                 <img
+                   src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Liverpool_logo.svg/1280px-Liverpool_logo.svg.png"
+                   alt="Logo Liverpool"
+                   class="h-14 md:h-16" style="max-height: 45px; width: auto;"
+                   onerror="this.onerror=null; this.src='https://placehold.co/150x45/E10098/FFFFFF?text=Liverpool&font=roboto';"
+                 >
+                <p class="text-sm text-gray-400 mt-2">Centro de Contacto Liverpool</p>
+                <p class="text-sm text-gray-400">Teléfono: 55 5262 9999, opción 3</p>
+            </div>
+        </header>
+
+        <div id="message-area" class="mb-6 p-4 rounded-md text-center text-base font-medium hidden"></div>
+        
+        <div id="quote-form-container">
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
+                <div class="bg-pink-50 p-6 rounded-lg border border-pink-200">
+                    <h2 class="text-xl font-semibold text-pink-700 mb-4">INFORMACIÓN DEL ASESOR</h2>
+                    <div class="space-y-4 text-base">
+                        <p><strong>Nombre:</strong> <input type="text" id="advisor-name" class="editable-input py-2" placeholder="Nombre del Asesor"></p>
+                        <p><strong>Puesto:</strong> Asesor de Ventas por Teléfono e Internet</p>
+                        <p><strong>Email:</strong> <span id="advisor-email-display">cargando...</span></p>
+                        <p><strong>Extensión:</strong> <input type="text" id="advisor-ext" class="editable-input py-2" placeholder="Ext."></p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">INFORMACIÓN DEL CLIENTE</h2>
+                    <div class="space-y-4 text-base">
+                        <p><strong>Dirigida a:</strong> <input type="text" id="client-name" class="editable-input py-2" placeholder="Nombre del Cliente" required></p>
+                        <p><strong>Correo:</strong> <input type="email" id="client-email" class="editable-input py-2" placeholder="correo@ejemplo.com"></p>
+                        <p><strong>Teléfono:</strong> <input type="tel" id="client-phone" class="editable-input py-2" placeholder="55 1234 5678"></p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-10 overflow-x-auto">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">DETALLE DE PRODUCTOS</h2>
+                <table id="product-table" class="w-full text-base border-collapse">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="col-sku">SKU</th>
+                            <th class="col-cantidad">Cant.</th>
+                            <th class="col-descripcion">Descripción</th>
+                            <th class="col-p-unitario">P. Unitario<br>(Base)</th>
+                            <th class="col-p-volumen">P. x<br>Volumen</th>
+                            <th class="col-costo-pago-unico">Costo Pago<br>Único (Línea)</th>
+                            <th class="col-desc-publico">Desc.<br>Púb. (%)</th>
+                            <th class="col-precio-c-desc">Precio c/<br>Desc. Púb.</th>
+                            <th class="col-desc-adic-select">Desc.<br>Adic.?</th>
+                            <th class="col-desc-adic-percent">% Desc.<br>Adic.</th>
+                            <th class="col-subtotal-base">Subtotal<br>(Base Fila)</th>
+                            <th class="col-iva">IVA<br>(16%)</th>
+                            <th class="col-total-fila">Total<br>Fila</th>
+                            <th class="no-print col-accion">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-rows"></tbody>
+                </table>
+                <button id="add-row" class="btn btn-pink mt-6 no-print text-base px-5 py-2.5">
+                    <span>Añadir Producto</span>
+                </button>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10 observations-section">
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                     <h2 class="text-xl font-semibold text-gray-700 mb-4">OBSERVACIONES</h2>
+                     <textarea id="observations" class="editable-input w-full h-28 text-base py-2" placeholder="Añadir observaciones aquí..."></textarea>
+                </div>
+                <div class="flex justify-end items-end">
+                    <div class="w-full md:w-4/5 lg:w-2/3 space-y-3 text-base">
+                        <div class="flex justify-between p-3 bg-gray-100 rounded">
+                            <span class="font-semibold">SUBTOTAL GENERAL (Base):</span>
+                            <span id="summary-subtotal" class="font-semibold">$0.00</span>
+                        </div>
+                        <div class="flex justify-between p-3">
+                            <span class="font-semibold">IVA GENERAL (16%):</span>
+                            <span id="summary-vat" class="font-semibold">$0.00</span>
+                        </div>
+                         <div class="flex justify-between p-4 bg-pink-100 rounded border border-pink-300">
+                            <span class="font-bold text-xl text-pink-700">TOTAL A PAGAR:</span>
+                            <span id="summary-total" class="font-bold text-xl text-pink-700">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="text-center text-sm text-gray-500 pt-6 border-t border-gray-200 mt-10">
+                <p class="mb-1">Disponibilidad sujeta a cambios sin previo aviso.</p>
+                <p class="mb-1">Considera que precios y promociones pueden cambiar.</p>
+                <p>Liverpool - Es parte de mi vida</p>
+            </footer>
+
+             <div id="action-buttons-area" class="text-center mt-10 no-print space-x-4">
+                <button id="request-review-button" class="btn btn-green text-base px-6 py-3">
+                    <span id="reviewButtonText">Ir a Vista Previa</span>
+                    <div id="reviewSpinner" class="spinner hidden"></div>
+                </button>
+            </div>
+        </div> 
+        <input type="hidden" id="current-quote-folio" value="">
+    </div>
+
+    <script>
+        const productRowsContainer = document.getElementById('product-rows');
+        const addRowButton = document.getElementById('add-row');
+        const requestReviewButton = document.getElementById('request-review-button');
+        const reviewButtonText = document.getElementById('reviewButtonText');
+        const reviewSpinner = document.getElementById('reviewSpinner');
+        const messageArea = document.getElementById('message-area');
+        const quoteFolioDisplay = document.getElementById('quote-folio-display');
+        const currentQuoteFolioInput = document.getElementById('current-quote-folio');
+        const advisorEmailDisplay = document.getElementById('advisor-email-display');
+        const advisorNameInput = document.getElementById('advisor-name');
+        const cancelQuoteButtonTop = document.getElementById('cancel-quote-button-top');
+        const quoteFormContainer = document.getElementById('quote-form-container');
+        const actionButtonsArea = document.getElementById('action-buttons-area');
+        const cancelButtontopArea = document.getElementById('cancel-button-area-top');
+
+        let currentUserEmail = null; 
+        let currentAdvisorName = ''; 
+        let scriptBaseUrl = ''; 
+
+        function formatCurrency(amount) {
+            if (isNaN(amount) || amount === null) amount = 0;
+            return amount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+        }
+
+        function parseCurrency(currencyString) {
+            if (typeof currencyString !== 'string') return 0;
+            return parseFloat(currencyString.replace(/[^0-9.-]+/g,"")) || 0;
+        }
+
+        function showGeneralMessage(text, isError = false, autohide = true) {
+            messageArea.textContent = text;
+            messageArea.className = `mb-6 p-4 rounded-md text-center text-base font-medium ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            messageArea.classList.remove('hidden');
+            if (!isError && autohide) { 
+                setTimeout(() => messageArea.classList.add('hidden'), 3500);
+            }
+        }
+        
+        function navigateToPage(page, params = {}) {
+            if (!scriptBaseUrl) {
+                showGeneralMessage('Error: URL base no cargada. No se puede navegar.', true, false);
+                if (requestReviewButton) requestReviewButton.disabled = false;
+                if (cancelQuoteButtonTop) cancelQuoteButtonTop.disabled = false;
+                return;
+            }
+
+            if (requestReviewButton) requestReviewButton.disabled = true;
+            if (cancelQuoteButtonTop) cancelQuoteButtonTop.disabled = true;
+
+            let url = scriptBaseUrl + '?page=' + page;
+            if (Object.keys(params).length > 0) {
+                url += '&' + new URLSearchParams(params).toString();
+            }
+            
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.target = '_top'; 
+            document.body.appendChild(anchor); 
+            anchor.click();
+            document.body.removeChild(anchor);
+        }
+
+        function setLoadingState(isLoading, button, buttonTextElement, originalText, spinnerElement) {
+            if (isLoading) {
+                button.disabled = true;
+                if (buttonTextElement) buttonTextElement.textContent = 'Procesando...';
+                if (spinnerElement) spinnerElement.classList.remove('hidden');
+            } else {
+                button.disabled = false;
+                if (buttonTextElement && originalText) buttonTextElement.textContent = originalText;
+                if (spinnerElement) spinnerElement.classList.add('hidden');
+            }
+        }
+
+        function calculateRow(row, eventSource = null) {
+            const quantityInput = row.querySelector('.quantity');
+            const unitPriceInput = row.querySelector('.unit-price');
+            const costPaymentUniqueInput = row.querySelector('.cost-payment-unique');
+            const discountPublicPercentInput = row.querySelector('.discount-public-percent');
+            const additionalDiscountAppliedSelect = row.querySelector('.additional-discount-applied');
+            const additionalDiscountPercentInput = row.querySelector('.additional-discount-percent');
+
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const unitPrice = parseFloat(unitPriceInput.value) || 0;
+            let costPaymentUnique = parseFloat(costPaymentUniqueInput.value) || 0; 
+            let discountPublicPercent = parseFloat(discountPublicPercentInput.value) || 0;
+            const applyAdditionalDiscount = additionalDiscountAppliedSelect.value === 'Si';
+            let additionalDiscountPercent = parseFloat(additionalDiscountPercentInput.value) || 0;
+
+            const priceVolume = quantity * unitPrice;
+
+            if (costPaymentUnique > 0 && unitPrice > 0 && quantity > 0 && eventSource === costPaymentUniqueInput) {
+                const effectivePricePerUnitAfterAllDiscounts = costPaymentUnique / quantity;
+                let totalDiscountPercentCalculated = 0;
+                if (unitPrice > 0) { 
+                    totalDiscountPercentCalculated = (1 - (effectivePricePerUnitAfterAllDiscounts / unitPrice)) * 100;
+                }
+                totalDiscountPercentCalculated = Math.max(0, Math.min(100, totalDiscountPercentCalculated)); 
+
+                if (applyAdditionalDiscount) {
+                    additionalDiscountPercentInput.value = totalDiscountPercentCalculated.toFixed(2);
+                    discountPublicPercentInput.value = 0; 
+                    additionalDiscountPercent = totalDiscountPercentCalculated;
+                    discountPublicPercent = 0;
+                } else {
+                    discountPublicPercentInput.value = totalDiscountPercentCalculated.toFixed(2);
+                    additionalDiscountPercentInput.value = 0; 
+                    discountPublicPercent = totalDiscountPercentCalculated;
+                    additionalDiscountPercent = 0;
+                }
+            } 
+            else if (eventSource === discountPublicPercentInput || 
+                       eventSource === additionalDiscountPercentInput || 
+                       eventSource === additionalDiscountAppliedSelect || 
+                       eventSource === unitPriceInput || 
+                       eventSource === quantityInput) {
+                costPaymentUniqueInput.value = ''; 
+                costPaymentUnique = 0; 
+            }
+
+            let priceAfterPublicDiscount = priceVolume * (1 - (discountPublicPercent / 100));
+            priceAfterPublicDiscount = Math.max(0, priceAfterPublicDiscount);
+
+            let finalPriceWithAllDiscounts = priceAfterPublicDiscount;
+            if (applyAdditionalDiscount) {
+                finalPriceWithAllDiscounts = priceAfterPublicDiscount * (1 - (additionalDiscountPercent / 100));
+            }
+            finalPriceWithAllDiscounts = Math.max(0, finalPriceWithAllDiscounts);
+            
+            if (costPaymentUnique > 0) { 
+                finalPriceWithAllDiscounts = costPaymentUnique;
+            }
+
+            const subtotalBaseRow = finalPriceWithAllDiscounts / 1.16; 
+            const vatRow = finalPriceWithAllDiscounts - subtotalBaseRow;  
+
+            row.querySelector('.price-volume').textContent = formatCurrency(priceVolume);
+            row.querySelector('.price-with-public-discount').textContent = formatCurrency(priceAfterPublicDiscount);
+            row.querySelector('.subtotal-row').textContent = formatCurrency(subtotalBaseRow);
+            row.querySelector('.vat-row').textContent = formatCurrency(vatRow);
+            row.querySelector('.total-row').textContent = formatCurrency(finalPriceWithAllDiscounts);
+
+            return { subtotalBase: subtotalBaseRow, vat: vatRow, total: finalPriceWithAllDiscounts };
+        }
+
+        function calculateTotals(eventSourceInput = null) { 
+            let summarySubtotal = 0;
+            let summaryVat = 0;
+            let summaryTotal = 0;
+            productRowsContainer.querySelectorAll('.product-row').forEach(row => {
+                const sourceForRow = row.contains(eventSourceInput) ? eventSourceInput : null;
+                const rowTotals = calculateRow(row, sourceForRow); 
+                summarySubtotal += rowTotals.subtotalBase;
+                summaryVat += rowTotals.vat;
+                summaryTotal += rowTotals.total;
+            });
+            document.getElementById('summary-subtotal').textContent = formatCurrency(summarySubtotal);
+            document.getElementById('summary-vat').textContent = formatCurrency(summaryVat);
+            document.getElementById('summary-total').textContent = formatCurrency(summaryTotal);
+        }
+
+        function createProductRowHtml() {
+            return `
+                <td class="border p-2 col-sku"><input type="text" class="editable-input sku" placeholder="SKU"></td>
+                <td class="border p-2 col-cantidad"><input type="number" class="editable-input quantity" value="1" min="1" step="1"></td>
+                <td class="border p-2 col-descripcion"><input type="text" class="editable-input description" placeholder="Descripción"></td>
+                <td class="border p-2 col-p-unitario"><input type="number" class="editable-input unit-price" value="0.00" min="0" step="0.01" title="Precio original sin descuentos"></td>
+                <td class="border p-2 text-right price-volume col-p-volumen" data-label="P. x Volumen">$0.00</td>
+                <td class="border p-2 col-costo-pago-unico"><input type="number" class="editable-input cost-payment-unique" value="" min="0" step="0.01" placeholder="Opcional" title="Precio final con descuento para esta línea"></td>
+                <td class="border p-2 col-desc-publico"><input type="number" class="editable-input discount-public-percent" value="0" min="0" max="100" step="0.01" title="Descuento público en %"></td>
+                <td class="border p-2 text-right price-with-public-discount col-precio-c-desc" data-label="Precio c/Desc. Púb.">$0.00</td>
+                <td class="border p-2 col-desc-adic-select">
+                    <select class="editable-input additional-discount-applied">
+                        <option value="No">No</option>
+                        <option value="Si">Si</option>
+                    </select>
+                </td>
+                <td class="border p-2 col-desc-adic-percent"><input type="number" class="editable-input additional-discount-percent" value="0" min="0" max="100" step="0.01" title="Descuento adicional en %"></td>
+                <td class="border p-2 text-right subtotal-row col-subtotal-base" data-label="Subtotal (Base)">$0.00</td>
+                <td class="border p-2 text-right vat-row col-iva" data-label="IVA (16%)">$0.00</td>
+                <td class="border p-2 text-right total-row font-semibold col-total-fila" data-label="Total Fila">$0.00</td>
+                <td class="border p-2 text-center no-print col-accion">
+                    <button class="btn btn-red text-xs px-2 py-1.5" onclick="removeRow(this)">Eliminar</button>
+                </td>
+            `;
+        }
+
+        function addRow() {
+            const newRow = document.createElement('tr');
+            newRow.classList.add('product-row');
+            newRow.innerHTML = createProductRowHtml();
+            productRowsContainer.appendChild(newRow);
+            addEventListenersToRow(newRow);
+            calculateTotals(); 
+            const firstInput = newRow.querySelector('.sku');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }
+
+        function removeRow(button) {
+            const row = button.closest('.product-row');
+            if (row) {
+                row.remove();
+                calculateTotals();
+            }
+        }
+
+        function addEventListenersToRow(row) {
+            row.querySelectorAll('.editable-input').forEach(input => {
+                input.addEventListener('input', (event) => calculateTotals(event.target)); 
+                input.addEventListener('change', (event) => calculateTotals(event.target));
+            });
+        }
+        
+
+        function populateQuoteForm(quoteDetails) {
+            if (!quoteDetails) return;
+            currentQuoteFolioInput.value = quoteDetails.folio || '';
+            quoteFolioDisplay.textContent = quoteDetails.folio || 'NUEVO';
+            advisorNameInput.value = quoteDetails.advisorName || currentAdvisorName || ''; 
+            document.getElementById('advisor-ext').value = quoteDetails.advisorExt || '';
+            if (advisorEmailDisplay) advisorEmailDisplay.textContent = quoteDetails.advisorEmail || currentUserEmail || 'No disponible';
+            document.getElementById('client-name').value = quoteDetails.clientName || '';
+            document.getElementById('client-email').value = quoteDetails.clientEmail || '';
+            document.getElementById('client-phone').value = quoteDetails.clientPhone || '';
+            document.getElementById('observations').value = quoteDetails.observations || '';
+            
+            productRowsContainer.innerHTML = ''; 
+            if (quoteDetails.products && Array.isArray(quoteDetails.products)) {
+                if (quoteDetails.products.length === 0) { 
+                    addRow(); 
+                } else {
+                    quoteDetails.products.forEach(product => {
+                        const newRow = document.createElement('tr');
+                        newRow.classList.add('product-row');
+                        newRow.innerHTML = createProductRowHtml(); 
+                        newRow.querySelector('.sku').value = product.sku || '';
+                        newRow.querySelector('.quantity').value = product.quantity || 1;
+                        newRow.querySelector('.description').value = product.description || '';
+                        newRow.querySelector('.unit-price').value = product.unitPrice || 0;
+                        newRow.querySelector('.cost-payment-unique').value = product.costPaymentUnique ? product.costPaymentUnique : ''; 
+                        newRow.querySelector('.discount-public-percent').value = product.discountPublicPercent || 0; 
+                        newRow.querySelector('.additional-discount-applied').value = product.additionalDiscountApplied || 'No';
+                        newRow.querySelector('.additional-discount-percent').value = product.additionalDiscountPercent || 0;
+                        productRowsContainer.appendChild(newRow);
+                        addEventListenersToRow(newRow);
+                    });
+                }
+            } else { 
+                 addRow(); 
+            }
+            calculateTotals(); 
+        }
+
+        function loadQuoteDetails(folio) {
+            showGeneralMessage('Cargando cotización...', false, false); 
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    if (response.success && response.quote) {
+                        populateQuoteForm(response.quote);
+                        showGeneralMessage('Cotización cargada.', false);
+                    } else {
+                        showGeneralMessage(response.message || 'Error al cargar la cotización. Creando nueva.', true, false);
+                        currentQuoteFolioInput.value = ''; 
+                        quoteFolioDisplay.textContent = 'NUEVO';
+                        if (productRowsContainer.children.length === 0) addRow();
+                        else calculateTotals(); 
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    showGeneralMessage('Error de comunicación al cargar cotización: ' + error.message, true, false);
+                    if (productRowsContainer.children.length === 0) addRow();
+                     else calculateTotals();
+                })
+                .getQuoteDetails(folio);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            google.script.run
+                .withSuccessHandler(function(url) {
+                    if (url) {
+                        scriptBaseUrl = url;
+                        console.log("URL base del script obtenida:", scriptBaseUrl);
+                    } else {
+                        console.error("No se pudo obtener la URL base del script.");
+                        showGeneralMessage("Error crítico: No se pudo inicializar la navegación.", true, false);
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    console.error("Error al obtener la URL base del script:", err);
+                    showGeneralMessage("Error crítico al inicializar: " + err.message, true, false);
+                })
+                .getScriptUrl();
+
+
+            console.log("Cotizacion.html DOM cargado.");
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = today.toLocaleDateString('es-MX', options); 
+            
+            try {
+                currentUserEmail = localStorage.getItem('userEmail');
+                currentAdvisorName = localStorage.getItem('userName'); 
+                if (advisorEmailDisplay) advisorEmailDisplay.textContent = currentUserEmail || 'No disponible';
+                if (advisorNameInput && !advisorNameInput.value && currentAdvisorName) {
+                     advisorNameInput.value = currentAdvisorName;
+                }
+            } catch (e) {
+                console.error("Error al acceder a localStorage:", e);
+                if (advisorEmailDisplay) advisorEmailDisplay.textContent = 'Error al cargar';
+            }
+            
+            if(addRowButton) addRowButton.addEventListener('click', addRow);
+            if(cancelQuoteButtonTop) cancelQuoteButtonTop.addEventListener('click', () => navigateToPage('dashboard'));
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const folioFromUrl = urlParams.get('folio');
+            const actionFromUrl = urlParams.get('action');
+
+            if (folioFromUrl && actionFromUrl === 'edit') {
+                loadQuoteDetails(folioFromUrl); 
+            } else { 
+                currentQuoteFolioInput.value = ''; 
+                quoteFolioDisplay.textContent = 'NUEVO';
+                if (productRowsContainer.children.length === 0) { 
+                    addRow(); 
+                } else {
+                    calculateTotals(); 
+                }
+            }
+        });
+
+        if (requestReviewButton) {
+            requestReviewButton.addEventListener('click', () => {
+                messageArea.classList.add('hidden'); 
+                
+                const clientName = document.getElementById('client-name').value.trim();
+                if (!clientName) {
+                    showGeneralMessage('El nombre del cliente es obligatorio.', true, false);
+                    document.getElementById('client-name').focus();
+                    return;
+                }
+                if (productRowsContainer.children.length === 0) {
+                    showGeneralMessage('Debe añadir al menos un producto a la cotización.', true, false);
+                    return;
+                }
+                let hasValidProduct = false;
+                productRowsContainer.querySelectorAll('.product-row').forEach(row => {
+                    const sku = row.querySelector('.sku').value.trim();
+                    const description = row.querySelector('.description').value.trim();
+                    if (sku || description) {
+                        hasValidProduct = true;
+                    }
+                });
+                if (!hasValidProduct) {
+                    showGeneralMessage('Al menos un producto debe tener SKU o Descripción.', true, false);
+                    return;
+                }
+
+                if (!currentUserEmail) { 
+                    showGeneralMessage('No se pudo identificar al asesor. Por favor, recarga la página o inicia sesión de nuevo.', true, false);
+                    return;
+                }
+
+                setLoadingState(true, requestReviewButton, reviewButtonText, "Ir a Vista Previa", reviewSpinner);
+
+                const quoteData = {
+                    folio: currentQuoteFolioInput.value || null, 
+                    advisorName: advisorNameInput.value.trim() || currentAdvisorName, 
+                    advisorExt: document.getElementById('advisor-ext').value.trim(),
+                    advisorEmail: currentUserEmail, 
+                    clientName: clientName,
+                    clientEmail: document.getElementById('client-email').value.trim(),
+                    clientPhone: document.getElementById('client-phone').value.trim(),
+                    products: [],
+                    observations: document.getElementById('observations').value.trim(),
+                    summarySubtotal: parseCurrency(document.getElementById('summary-subtotal').textContent),
+                    summaryVat: parseCurrency(document.getElementById('summary-vat').textContent),
+                    summaryTotal: parseCurrency(document.getElementById('summary-total').textContent),
+                    status: "Borrador Vista Previa" 
+                };
+                productRowsContainer.querySelectorAll('.product-row').forEach(row => {
+                    quoteData.products.push({
+                        sku: row.querySelector('.sku').value.trim(),
+                        quantity: parseInt(row.querySelector('.quantity').value) || 0,
+                        description: row.querySelector('.description').value.trim(),
+                        unitPrice: parseFloat(row.querySelector('.unit-price').value) || 0,
+                        costPaymentUnique: parseFloat(row.querySelector('.cost-payment-unique').value) || 0, 
+                        discountPublicPercent: parseFloat(row.querySelector('.discount-public-percent').value) || 0, 
+                        additionalDiscountApplied: row.querySelector('.additional-discount-applied').value,
+                        additionalDiscountPercent: parseFloat(row.querySelector('.additional-discount-percent').value) || 0
+                    });
+                });
+                
+                google.script.run
+                    .withSuccessHandler(function(response) {
+                        setLoadingState(false, requestReviewButton, reviewButtonText, "Ir a Vista Previa", reviewSpinner);
+                        if (response.success) {
+                            showGeneralMessage(response.message, false); 
+                            try {
+                                currentQuoteFolioInput.value = response.folio; 
+                                quoteData.folio = response.folio; 
+
+                                localStorage.setItem('pendingQuoteData', JSON.stringify(quoteData));
+                                console.log("Datos de cotización guardados en localStorage para vista previa con folio: " + response.folio);
+                                
+                                navigateToPage('cotizado_preview', { folio: response.folio }); 
+                            } catch (e) {
+                                console.error("Error al guardar en localStorage para vista previa:", e);
+                                showGeneralMessage('Error al preparar la vista previa localmente. Intente de nuevo.', true, false);
+                                 if (requestReviewButton) requestReviewButton.disabled = false; 
+                            }
+                        } else {
+                            showGeneralMessage(response.message || 'Error desconocido al guardar la cotización en Sheets.', true, false);
+                             if (requestReviewButton) requestReviewButton.disabled = false; 
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        setLoadingState(false, requestReviewButton, reviewButtonText, "Ir a Vista Previa", reviewSpinner);
+                        showGeneralMessage('Error de comunicación al guardar cotización: ' + error.message, true, false);
+                        console.error("Error en llamada a saveQuoteAndGoToPreview:", error);
+                         if (requestReviewButton) requestReviewButton.disabled = false; 
+                    })
+                    .saveQuoteAndGoToPreview(quoteData); 
+            });
+        }
+    </script>
+
+</body>
+</html>
