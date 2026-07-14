@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Cotizaciones Ventel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-pink': '#E10098',
+                        'brand-pink-dark': '#c10080',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-pink: #E10098;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- ANIMACIÓN DE ENTRADA --- */
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .animate-entry {
+            opacity: 0;
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        /* --- NAVBAR CON EFECTO DE SCROLL --- */
+        .nav-sticky {
+            position: sticky; top: 0; z-index: 50;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease-in-out;
+        }
+        .nav-scrolled {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-bottom-color: #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- COMPONENTES --- */
+        .form-input-icon { padding-left: 2.5rem; }
+        .form-input-icon:focus {
+            outline: none; border-color: var(--brand-pink);
+            box-shadow: 0 0 0 3px rgba(225, 0, 152, 0.2);
+        }
+        
+        /* --- SPINNER DE CARGA --- */
+        .spinner {
+            display: inline-block; width: 1.25em; height: 1.25em;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- DESACTIVACIÓN DE INTERFAZ --- */
+        .ui-locked {
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body class="h-full text-slate-800">
+
+    <nav id="navbar" class="nav-sticky">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <img src="https://assetspwa.liverpool.com.mx/assets/digital/mailings/img/liv_w.png" alt="Logo Liverpool" class="h-8 bg-brand-pink p-1 rounded-md shadow-sm">
+                    <span class="font-bold text-xl text-brand-pink tracking-tight hidden sm:inline">Ventel</span>
+                </div>
+                <!-- Usuario y Salir -->
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-slate-600 hidden md:inline">
+                        Bienvenido, <strong id="user-name" class="font-medium text-slate-800">Usuario</strong>
+                    </span>
+                    <button id="logoutButton" class="flex items-center gap-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors px-3 py-2 rounded-md border border-slate-200 disabled:opacity-50 disabled:cursor-wait">
+                        <span class="button-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                        </span>
+                        <span class="button-text hidden sm:inline">Salir</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Cabecera -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight animate-entry">
+                Sistema de Cotizaciones Ventel
+            </h1>
+            <p class="text-slate-600 mt-1 animate-entry" style="animation-delay: 100ms;">
+                Gestiona y da seguimiento a todas tus cotizaciones en un solo lugar.
+            </p>
+        </header>
+
+        <!-- Acciones -->
+        <section class="mb-8 p-6 bg-white rounded-xl shadow-sm border border-slate-200 animate-entry" style="animation-delay: 200ms;">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <!-- Botón para Nueva Cotización -->
+                    <a href="#" id="newQuoteButton" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-white bg-brand-pink hover:bg-brand-pink-dark transition-all duration-200 px-4 py-2.5 rounded-md shadow-sm disabled:opacity-50 disabled:cursor-wait">
+                        <span class="button-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        </span>
+                        <span class="button-text">Nueva Cotización</span>
+                    </a>
+                    <!-- NUEVO BOTÓN: Enviar Correo -->
+                    <a href="#" id="sendEmailButton" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-white bg-slate-600 hover:bg-slate-700 transition-all duration-200 px-4 py-2.5 rounded-md shadow-sm disabled:opacity-50 disabled:cursor-wait">
+                        <span class="button-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m21.75 0l-2.25 2.25m0 0l-8.25 8.25-8.25-8.25m16.5 0l-2.25-2.25L12 12.75l-8.25-8.25L2.25 6.75" /></svg>
+                        </span>
+                        <span class="button-text">Enviar Correo</span>
+                    </a>
+                </div>
+                <div class="flex-grow md:max-w-sm">
+                    <form id="searchForm" class="relative">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg class="w-5 h-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                        </div>
+                        <input type="search" id="searchInput" name="search" placeholder="Buscar por Folio, Cliente o Correo..." class="w-full rounded-md border-slate-300 shadow-sm transition form-input-icon focus:ring-brand-pink focus:border-brand-pink disabled:bg-slate-100">
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabla de Cotizaciones -->
+        <section class="animate-entry" style="animation-delay: 300ms;">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 font-semibold">Folio</th><th scope="col" class="px-6 py-4 font-semibold">Cliente</th><th scope="col" class="px-6 py-4 font-semibold">Fecha</th><th scope="col" class="px-6 py-4 font-semibold">Total</th><th scope="col" class="px-6 py-4 font-semibold">Estatus</th><th scope="col" class="px-6 py-4 font-semibold text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quotes-table-body" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+                <div id="table-placeholder" class="text-center p-12 text-slate-500"></div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 animate-entry" style="animation-delay: 400ms;">
+            <p class="text-sm text-slate-500">¿Necesitas ayuda? <a href="mailto:dmartineza02@liverpool.com.mx" class="font-medium text-brand-pink hover:underline">Contacta a Soporte</a></p>
+        </footer>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const mainContent = document.getElementById('main-content');
+        const userNameElement = document.getElementById('user-name');
+        const tableBody = document.getElementById('quotes-table-body');
+        const tablePlaceholder = document.getElementById('table-placeholder');
+        const quoteTable = tableBody.closest('table');
+        const logoutButton = document.getElementById('logoutButton');
+        const newQuoteButton = document.getElementById('newQuoteButton');
+        const sendEmailButton = document.getElementById('sendEmailButton'); // <-- NUEVO: Referencia al botón de correo
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const navbar = document.getElementById('navbar');
+
+        let currentUserEmail = null;
+
+        const setUIInteractionState = (isLocked) => {
+            // Se añade el nuevo botón a la lista de elementos interactivos
+            const interactiveElements = [newQuoteButton, sendEmailButton, logoutButton, searchInput, ...document.querySelectorAll('.view-quote-btn')];
+            interactiveElements.forEach(el => { if(el) el.disabled = isLocked });
+            mainContent.classList.toggle('ui-locked', isLocked);
+        };
+
+        const setButtonLoadingState = (button, isLoading) => {
+            if (!button) return;
+            const textEl = button.querySelector('.button-text');
+            const iconEl = button.querySelector('.button-icon');
+            
+            if (isLoading) {
+                if (textEl && !button.dataset.originalText) button.dataset.originalText = textEl.textContent;
+                if (iconEl && !button.dataset.originalIcon) button.dataset.originalIcon = iconEl.innerHTML;
+                
+                if (textEl) textEl.textContent = 'Cargando...';
+                if (iconEl) {
+                    iconEl.innerHTML = '<div class="spinner w-5 h-5"></div>';
+                }
+            } else {
+                if (textEl && button.dataset.originalText) textEl.textContent = button.dataset.originalText;
+                if (iconEl && button.dataset.originalIcon) iconEl.innerHTML = button.dataset.originalIcon;
+            }
+        };
+
+        const navigateToPage = (page, params = {}, buttonElement = null) => {
+            setUIInteractionState(true);
+            if (buttonElement) setButtonLoadingState(buttonElement, true);
+
+            google.script.run
+                .withSuccessHandler(baseUrl => {
+                    let url = `${baseUrl}?page=${page}`;
+                    const urlParams = new URLSearchParams(params).toString();
+                    if (urlParams) url += `&${urlParams}`;
+                    window.top.location.href = url;
+                })
+                .withFailureHandler(error => {
+                    console.error("Error al intentar navegar:", error);
+                    alert("Error al intentar navegar: " + error.message);
+                    if (buttonElement) setButtonLoadingState(buttonElement, false);
+                    setUIInteractionState(false);
+                })
+                .getScriptUrl();
+        };
+
+        window.navigateToQuoteView = function(folio) {
+            if (!folio) return alert("Error: Folio no disponible.");
+            try { localStorage.setItem('selectedQuoteFolio', folio); } catch (e) { console.error('Error al guardar folio:', e); }
+            navigateToPage('consulta_cotizacion', { folio: folio }, this);
+        };
+        
+        const loadUserQuotes = (searchTerm = null) => {
+            if (!currentUserEmail) {
+                updateTablePlaceholder("Inicia sesión para ver tus cotizaciones.", true);
+                return;
+            }
+            const loadingMessage = searchTerm ? 'Buscando cotizaciones...' : 'Cargando tus cotizaciones...';
+            updateTablePlaceholder(`<div class="flex items-center justify-center gap-3"><div class="spinner"></div> ${loadingMessage}</div>`, false);
+            
+            google.script.run
+                .withSuccessHandler(response => displayQuotes(response.success ? (response.quotes || []) : []))
+                .withFailureHandler(error => {
+                    console.error("Fallo en la llamada a getQuotesForUser:", error);
+                    updateTablePlaceholder("Error de comunicación al cargar cotizaciones.", true);
+                })
+                .getQuotesForUser(currentUserEmail, searchTerm);
+        };
+
+        const displayQuotes = (quotes) => {
+            tableBody.innerHTML = '';
+            if (quotes.length === 0) {
+                const message = searchInput.value.trim() ? "No se encontraron cotizaciones para tu búsqueda." : "Aún no tienes cotizaciones. ¡Crea una nueva!";
+                updateTablePlaceholder(message, true);
+                return;
+            }
+            updateTablePlaceholder("", false);
+
+            quotes.forEach((quote, index) => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white hover:bg-slate-50 transition-colors duration-200';
+                row.style.opacity = '0';
+                row.style.animation = `slideInUp 0.5s ease-out ${index * 0.05}s forwards`;
+                
+                const estatusLower = String(quote.estatus || '').toLowerCase().replace(/\s+/g, '-');
+                const statusClasses = {
+                    'autorizada': 'bg-green-100 text-green-800', 'rechazada': 'bg-red-100 text-red-800',
+                    'en-revision': 'bg-yellow-100 text-yellow-800', 'folio-generado': 'bg-yellow-100 text-yellow-800',
+                    'default': 'bg-blue-100 text-blue-800'
+                };
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-slate-900">${quote.folio || 'N/A'}</td>
+                    <td class="px-6 py-4">${quote.cliente || 'N/A'}</td>
+                    <td class="px-6 py-4">${quote.fecha || 'N/A'}</td>
+                    <td class="px-6 py-4">${(parseFloat(quote.total) || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClasses[estatusLower] || statusClasses.default}">
+                            ${quote.estatus || 'Pendiente'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="navigateToQuoteView.call(this, '${String(quote.folio || '').replace(/'/g, "\\'")}')" class="view-quote-btn flex items-center gap-1.5 mx-auto font-medium text-brand-pink hover:text-brand-pink-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-wait">
+                            <span class="button-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></span>
+                            <span class="button-text">Ver</span>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const updateTablePlaceholder = (message, isFinalState) => {
+            tablePlaceholder.innerHTML = message;
+            const showPlaceholder = message !== "";
+            tablePlaceholder.classList.toggle('hidden', !showPlaceholder);
+            quoteTable.classList.toggle('hidden', showPlaceholder);
+        };
+
+        window.addEventListener('scroll', () => navbar.classList.toggle('nav-scrolled', window.scrollY > 10));
+
+        try {
+            const userName = localStorage.getItem('userName') || 'Usuario';
+            currentUserEmail = localStorage.getItem('userEmail');
+            if (userNameElement) userNameElement.textContent = userName.split(' ')[0];
+        } catch (e) { console.error("Error al acceder a localStorage:", e); }
+
+        newQuoteButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            navigateToPage('cotizacion', {}, newQuoteButton);
+        });
+        
+        // <-- NUEVO: Event listener para el botón de correo
+        sendEmailButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            navigateToPage('correoventel', {}, sendEmailButton);
+        });
+
+        logoutButton.addEventListener('click', () => {
+            try { localStorage.clear(); } catch (e) { console.error("Error al limpiar localStorage:", e); }
+            navigateToPage('login', {}, logoutButton);
+        });
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            loadUserQuotes(searchInput.value.trim());
+        });
+
+        searchInput.addEventListener('input', () => {
+            if (searchInput.value.trim() === '') loadUserQuotes();
+        });
+
+        loadUserQuotes();
+    });
+    </script>
+</body>
+</html>
