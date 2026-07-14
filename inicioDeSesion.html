@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Sistema de Cotizaciones Ventel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-pink': '#E10098',
+                        'brand-pink-dark': '#c10080',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        
+        /* --- ANIMACIONES --- */
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes pulse { 50% { opacity: 0.8; transform: scale(1.05); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .animate-entry { animation: slideInUp 0.7s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-fade-out { animation: fadeOut 0.3s ease-in forwards; }
+        .animate-pulse-loading { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .spinner { border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.75s linear infinite; }
+    </style>
+</head>
+<body class="h-full">
+    <div class="flex min-h-full">
+        <!-- Panel Izquierdo (Branding) -->
+        <div class="relative hidden w-0 flex-1 lg:block">
+            <div class="absolute inset-0 h-full w-full bg-gradient-to-br from-brand-pink to-purple-600 flex flex-col justify-center items-center p-12">
+                <img class="h-16" src="https://assetspwa.liverpool.com.mx/assets/digital/mailings/img/liv_w.png" alt="Logo Liverpool">
+                <h2 class="mt-6 text-3xl font-bold tracking-tight text-white text-center">Bienvenido a Ventel</h2>
+                <p class="mt-2 text-lg text-pink-100">Tu socio estratégico en cotizaciones.</p>
+            </div>
+        </div>
+
+        <!-- Panel Derecho (Formulario) -->
+        <div class="flex flex-1 flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+            <div class="mx-auto w-full max-w-sm lg:w-96 animate-entry">
+                <div class="lg:hidden mb-8 text-center">
+                    <img class="h-12 mx-auto bg-brand-pink rounded-md p-2" src="https://assetspwa.liverpool.com.mx/assets/digital/mailings/img/liv_w.png" alt="Logo Liverpool">
+                </div>
+
+                <div>
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900">Iniciar Sesión</h2>
+                    <p class="mt-2 text-sm text-gray-600">
+                        ¿No tienes una cuenta?
+                        <a href="#" id="createAccountLink" class="font-medium text-brand-pink hover:text-brand-pink-dark">Crea una aquí</a>
+                    </p>
+                </div>
+
+                <div class="mt-8">
+                    <!-- Contenedor del Formulario -->
+                    <div id="formContainer">
+                        <div id="message-container" class="mb-4 text-center"></div>
+                        <form id="loginForm" class="space-y-6">
+                            <!-- Campos de correo y contraseña... -->
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                                <div class="mt-1 relative"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg></div><input id="email" name="email" type="email" autocomplete="email" required placeholder="tu.usuario@liverpool.com.mx" class="block w-full rounded-md border-gray-300 pl-10 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"></div>
+                            </div>
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                                <div class="mt-1 relative"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" /></svg></div><input id="password" name="password" type="password" required minlength="6" placeholder="Mínimo 6 caracteres" class="block w-full rounded-md border-gray-300 pl-10 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"></div>
+                                <p id="passwordError" class="text-red-500 text-xs mt-1 hidden">La contraseña debe tener al menos 6 caracteres.</p>
+                            </div>
+                            <div><button type="submit" id="loginButton" class="flex w-full justify-center rounded-md border border-transparent bg-brand-pink py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-brand-pink-dark focus:outline-none focus:ring-2 focus:ring-brand-pink focus:ring-offset-2">Iniciar Sesión</button></div>
+                        </form>
+                    </div>
+
+                    <!-- Contenedor del Estado de Carga -->
+                    <div id="loadingContainer" class="hidden text-center">
+                        <div id="loadingIcon" class="mx-auto bg-brand-pink rounded-md p-2 w-16 h-16 flex items-center justify-center animate-pulse-loading">
+                           <img class="w-12 h-12 object-contain" src="https://assetspwa.liverpool.com.mx/assets/digital/mailings/img/liv_w.png" alt="Logo Liverpool">
+                        </div>
+                        <h3 id="loadingText" class="mt-4 text-lg font-medium text-gray-900">Verificando credenciales...</h3>
+                        <p class="mt-1 text-sm text-gray-600">Por favor, espera un momento.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const formContainer = document.getElementById('formContainer');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const loadingIcon = document.getElementById('loadingIcon');
+        const loadingText = document.getElementById('loadingText');
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const passwordError = document.getElementById('passwordError');
+        const createAccountLink = document.getElementById('createAccountLink');
+        const messageContainer = document.getElementById('message-container');
+        
+        const showMessage = (text, isError = false) => {
+            messageContainer.textContent = text;
+            messageContainer.className = `text-sm font-medium text-center mb-4 ${isError ? 'text-red-600' : 'text-green-600'}`;
+        };
+
+        const showLoadingState = () => {
+            formContainer.classList.add('animate-fade-out');
+            formContainer.addEventListener('animationend', () => {
+                formContainer.classList.add('hidden');
+                loadingContainer.classList.remove('hidden');
+                loadingContainer.classList.add('animate-fade-in');
+            }, { once: true });
+        };
+
+        const hideLoadingState = () => {
+            loadingIcon.innerHTML = '<img class="w-12 h-12 object-contain" src="https://assetspwa.liverpool.com.mx/assets/digital/mailings/img/liv_w.png" alt="Logo Liverpool">';
+            loadingIcon.classList.remove('bg-green-100');
+            loadingIcon.classList.add('bg-brand-pink', 'animate-pulse-loading');
+            loadingText.textContent = 'Verificando credenciales...';
+            
+            loadingContainer.classList.remove('animate-fade-in');
+            loadingContainer.classList.add('animate-fade-out');
+            loadingContainer.addEventListener('animationend', () => {
+                loadingContainer.classList.add('hidden');
+                formContainer.classList.remove('hidden', 'animate-fade-out');
+                formContainer.classList.add('animate-fade-in');
+            }, { once: true });
+        };
+
+        const showSuccessStateAndRedirect = (page) => {
+            loadingIcon.classList.remove('bg-brand-pink', 'animate-pulse-loading');
+            loadingIcon.classList.add('bg-green-100');
+            loadingIcon.innerHTML = '<svg class="h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
+            loadingText.textContent = '¡Éxito! Redirigiendo...';
+            
+            setTimeout(() => navigateTo(page), 1000);
+        };
+
+        const navigateTo = (page) => {
+             google.script.run
+                .withSuccessHandler(baseUrl => {
+                    if (baseUrl) window.top.location.href = `${baseUrl}?page=${page}`;
+                })
+                .withFailureHandler(error => {
+                    hideLoadingState();
+                    showMessage('Error de navegación: ' + error.message, true);
+                })
+                .getScriptUrl();
+        };
+
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            showMessage('');
+            passwordError.classList.add('hidden');
+
+            if (passwordInput.value.length < 6) {
+                passwordError.classList.remove('hidden');
+                passwordInput.focus();
+                return;
+            }
+
+            showLoadingState();
+
+            google.script.run
+                .withSuccessHandler(response => {
+                    if (response.success) {
+                        try {
+                            localStorage.setItem('userName', response.userName);
+                            localStorage.setItem('userEmail', response.userEmail);
+                            localStorage.setItem('isAdvanced', response.isAdvanced);
+                        } catch (e) { console.error("Error al guardar en localStorage:", e); }
+                        
+                        if (response.isAdvanced) {
+                            showSuccessStateAndRedirect('inicio_avanzado');
+                        } else {
+                            showSuccessStateAndRedirect('dashboard');
+                        }
+                        
+                    } else {
+                        hideLoadingState();
+                        showMessage(response.message || 'Correo o contraseña incorrectos.', true);
+                    }
+                })
+                .withFailureHandler(error => {
+                    hideLoadingState();
+                    showMessage('Error de comunicación: ' + error.message, true);
+                })
+                .loginUser(emailInput.value, passwordInput.value);
+        });
+
+        passwordInput.addEventListener('input', () => {
+            if (passwordInput.value.length >= 6) {
+                passwordError.classList.add('hidden');
+            }
+        });
+
+        createAccountLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigateTo('registro');
+        });
+    </script>
+</body>
+</html>
