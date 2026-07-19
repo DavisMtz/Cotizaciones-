@@ -28,9 +28,9 @@ Características arquitectónicas clave:
 ```
 Navegador (iframe sandbox)                 Servidores de Google (Apps Script)
 ┌───────────────────────────┐              ┌──────────────────────────────────┐
-│  Pantallas .html           │  doGet(e)   │  Code.gs   (router, auth, CRUD)   │
-│  + includes compartidos    │◀───────────▶│  Formatos.gs (formatos, PDF, CCL) │
-│  (app_core / theme / etc.) │ script.run  │  Correos.gs  (HTML correo, envío) │
+│  Pantallas .html          │  doGet(e)    │ Code.gs   (router, auth, CRUD)   │
+│  + includes compartidos   │◀──────────▶ │ Formatos.gs (formatos, PDF, CCL) │
+│  (app_core / theme / etc.)│ script.run   │ Correos.gs  (HTML correo, envío) │
 └───────────────────────────┘              └──────────────┬───────────────────┘
                                                           │
                                      ┌────────────────────┼─────────────────────┐
